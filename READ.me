@@ -1,0 +1,58 @@
+1. 目录结构；
+        /my_flask_app/          # 项目根目录，建议使用一个有意义的名称
+        ├── app/                # Flask 应用主包（强烈推荐）
+        │   ├── __init__.py     # 应用工厂函数，配置 Flask 应用实例
+        │   ├── config.py       # 存放配置类或配置变量
+        │   ├── models/         # 数据库模型定义（如果使用 ORM 如 SQLAlchemy）
+        │   │   ├── __init__.py
+        │   │   └── user.py     # 用户模型示例
+        │   ├── routes/         # 路由和视图函数
+        │   │   ├── __init__.py
+        │   │   ├── main.py     # 主路由模块（如首页、静态页面）
+        │   │   └── api.py      # API 路由模块
+        │   ├── services/       # 业务逻辑层（可选，但推荐）
+        │   │   ├── __init__.py
+        │   │   └── user_service.py # 用户相关业务逻辑示例
+        │   ├── static/         # 静态文件
+        │   │   ├── css/
+        │   │   ├── js/
+        │   │   └── images/
+        │   ├── templates/      # 模板文件（如果使用 Jinja2）
+        │   │   ├── base.html   # 基础模板
+        │   │   ├── index.html  # 首页模板
+        │   │   └── ...         # 其他页面模板
+        │   ├── utils/          # 工具函数和辅助类
+        │   │   ├── __init__.py
+        │   │   └── decorators.py # 装饰器示例
+        │   └── tests/          # 单元测试和集成测试
+        │       ├── __init__.py
+        │       ├── test_routes.py
+        │       └── test_models.py
+        ├── migrations/         # 数据库迁移文件（如果使用 Flask-Migrate）
+        │   ├── versions/
+        │   └── ...              # Alembic 迁移脚本
+        ├── requirements.txt    # 项目依赖文件
+        ├── .env                # 环境变量文件（可选，用于本地开发）
+        ├── .flaskenv           # Flask 特定的环境配置（可选）
+        ├── .gitignore          # Git 忽略文件
+        ├── README.md           # 项目说明文档
+        └── run.py              # 启动脚本（用于开发环境）
+
+
+2. 环境问题； mac brew install 的 python 不建议使用系统的 python 环境；
+    python3 -m venv myenv
+    source myenv/bin/activate
+    pip install --upgrade setuptools
+
+    python 版本过高，可以使用
+        1. brew install python@3.9 下载指定版本；
+        2. brew unlink python
+        3. brew link --overwrite --force python@3.9
+
+    不同的 python 对应的包安装；
+         python -m pip install --upgrade --force-reinstall pydantic==2.11.7
+
+    如果必须使用虚拟环境；
+    命令行；
+
+3.
