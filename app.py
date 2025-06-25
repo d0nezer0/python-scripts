@@ -1,11 +1,10 @@
 from apscheduler.triggers.cron import CronTrigger
-from flask import Flask
+from flask import Flask, request
 from flask import jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
-from app.ocr.pipeline.medical import ocr_by_url
-from app.ocr.pipeline.ocr_subtitle import OcrSubtitlePipline
+from app.ocr.pipeline.medical import ocr_by_url, ocr_by_path
 
 app = Flask(__name__)
 
@@ -30,7 +29,9 @@ atexit.register(lambda: scheduler.shutdown())
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    data = ocr_by_path("/Users/zhoudong/Pictures/jj/WechatIMG32.jpg")
+    print(data)
+    return jsonify(data)
 
 
 @app.route('/data')
@@ -39,12 +40,17 @@ def get_data():
     return jsonify(data)
 
 
-@app.route('/ocr/?url=<url>')
+@app.route('/ocr/<url>')
 def get_img_ocr(url):
-    preds = ocr_by_url(url)
-    return preds
+    data = ocr_by_url(url)
+    return jsonify(data)
 
 
+@app.route('/api/ocr', methods=['POST'])
+def handle_json():
+    args = request.get_json()
+    data = ocr_by_url(args.get("url"))
+    return jsonify(data)
 
 
 if __name__ == '__main__':
