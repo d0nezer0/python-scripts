@@ -4,6 +4,7 @@ from flask import jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
+from app.ocr.AI.volcano import get_by_request
 from app.ocr.pipeline.medical import ocr_by_url, ocr_by_path
 
 app = Flask(__name__)
@@ -53,7 +54,17 @@ def handle_json():
     return jsonify(data)
 
 
+@app.route('/volcano/ask', methods=['POST'])
+def movie_intro():
+    args = request.get_json()
+    data = get_by_request(args.get("content"))
+    return data
+    # return jsonify(data)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    # Flask 默认只监听 localhost（127.0.0.1），需要显式指定 host='0.0.0.0' 以监听所有网络接口
+    app.run(host='0.0.0.0', port=5555)
     # 可以在这里控制需要跑哪些功能， 甚至加上定时功能；
 
