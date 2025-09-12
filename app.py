@@ -11,11 +11,11 @@ app = Flask(__name__)
 
 
 def scheduled_task():
-    print("定时任务执行中...")
+    print(f"定时任务执行中...")
 
 
 def job_function():
-    print("每5分钟执行的任务...")
+    print(f"每5分钟执行的任务...")
 
 
 # 创建后台调度器
