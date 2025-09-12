@@ -1,5 +1,6 @@
 flask
 apscheduler
+requests
 tzlocal
 paddleocr==2.8.0
 paddlepaddle==2.6.1
@@ -8,3 +9,9 @@ qrcode
 Pillow
 pydantic==2.11.7
 pydantic-core==2.33.2
+pymupdf
+opencv-python
+pytesseract
+shapely
+pyclipper
+firecrawl-py

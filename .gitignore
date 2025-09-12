@@ -1,0 +1,14 @@
+.idea/
+.idea
+.DS_Store
+logs/
+*.pyc
+performance/orders/*.csv
+# 忽略所有 .jpg, .jpeg, .png, .gif 图片文件
+performance/ocr/pdf/**/*.{jpg,jpeg,png,gif}
+performance/ocr/pdf/**/*.png
+performance/ocr/pdf/**/*.pdf
+files/
+backup/
+*.py[cod]
+*$py.class

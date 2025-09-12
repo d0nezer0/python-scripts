@@ -11,17 +11,18 @@ from paddleocr import PaddleOCR
 class OcrSubtitlePipline:
     def __init__(self):
         print(os.getcwd())
+        print(os.system("pwd"))
         print(os.system("ls ../pipeline/onnx/cls_model.onnx"))
-        print(os.system("pip list | grep paddle"))
         self.ocr = PaddleOCR(
             use_angle_cls=False,
             use_gpu=False,
             use_onnx=True,
             show_log=False,
-            # 线上当前目录为 my-flask-app
+            #跑当前服务的 main 方法
             # det_model_dir='../pipeline/onnx/det_model.onnx',
             # rec_model_dir='../pipeline/onnx/rec_model.onnx',
             # cls_model_dir='../pipeline/onnx/cls_model.onnx'
+            # 线上当前目录为 my-flask-app
             det_model_dir='app/ocr/pipeline/onnx/det_model.onnx',
             rec_model_dir='app/ocr/pipeline/onnx/rec_model.onnx',
             cls_model_dir='app/ocr/pipeline/onnx/cls_model.onnx'

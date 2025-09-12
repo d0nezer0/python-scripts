@@ -23,8 +23,6 @@ target_mapping = {
     "直接胆红素": "direct_bilirubin",
     "总蛋白": "total_protein",
     "白蛋白": "albumin",
-    "尿素": "urea",
-    "血肌酐": "serum_creatinine_duplicate",
     "肾小球滤过率": "glomerular_filtration_rate",
     "钾": "potassium",
     "钠": "sodium",
@@ -42,6 +40,40 @@ target_mapping = {
     "PRA抗体": "pra_antibody"
 }
 
+# 用于存储匹配后的数据，结构和数据库字段对应
+result_data = {
+    "fk506_concentration": None, 		# 'Fk506浓度(ng/mL)'
+    "serum_creatinine": None, 			# '血肌酐(μmol/L)'
+    "blood_urea_nitrogen": None, 		# '尿素氮(mmol/L)'
+    "uric_acid": None, 					# '尿酸(μmol/L)'
+    "hemoglobin": None, 				# '血红蛋白(g/L)'
+    "platelets": None, 					# '血小板(×10^9/L)'
+    "white_blood_cells": None, 			# '白细胞(×10^9/L)'
+    "c_reactive_protein": None, 		# 'C反应蛋白(mg/L)'
+    "mycophenolic_acid_method": None, 	# '霉芬酸三点法'
+    "blood_glucose": None, 				# '血糖(mmol/L)'
+    "alt": None, 					    # '丙氨酸氨基转移酶(U/L)'
+    "ast": None, 					    # '天门冬氨酸氨基转移酶(U/L)'
+    "total_bilirubin": None, 			# '总胆红素(μmol/L)'
+    "direct_bilirubin": None, 			# '直接胆红素(μmol/L)'
+    "total_protein": None, 				# '总蛋白(g/L)'
+    "albumin": None, 					# '白蛋白(g/L)'
+    "glomerular_filtration_rate": None, # '肾小球滤过率(mL/min/1.73m²)'
+    "potassium": None, 					# '钾(mmol/L)'
+    "sodium": None, 					# '钠(mmol/L)'
+    "total_cholesterol": None, 			# '总胆固醇(mmol/L)'
+    "triglycerides": None, 				# '甘油三酯(mmol/L)'
+    "hdl_cholesterol": None, 			# '高密度脂蛋白胆固醇(mmol/L)'
+    "ldl_cholesterol": None, 			# '低密度脂蛋白胆固醇(mmol/L)'
+    "cmv_dna_load": None, 				# '巨细胞病毒DNA载量'
+    "blood_bkv": None, 					# '血BK病毒定性检测'
+    "blood_bkv_dna_load": None, 		# '血BK病毒DNA载量(copies/mL)'
+    "urine_protein": None, 				# '尿蛋白定性'
+    "urine_protein_24h": None, 			# '24小时尿蛋白定量(g/24h)'
+    "urine_bkv": None, 					# '尿BK病毒定性检测'
+    "urine_bkv_dna_load": None, 		# '尿BK病毒DNA载量(copies/mL)'
+    "pra_antibody": None, 				# 'PRA抗体'
+}
 
 def ocr_by_url(img_url):
     response = requests.get(img_url)
@@ -60,52 +92,26 @@ def ocr_by_path(img_path):
     preds = ocr_subtitle.forward(img_path, show_res=True)
     # 在这里解析了， 返回对应 json ；
     print(preds)
-    # 用于存储匹配后的数据，结构和数据库字段对应
-    result_data = {
-        "fk506_concentration": None, 		# 'Fk506浓度(ng/mL)'
-        "serum_creatinine": None, 			# '血肌酐(μmol/L)'
-        "blood_urea_nitrogen": None, 		# '尿素氮(mmol/L)'
-        "uric_acid": None, 					# '尿酸(μmol/L)'
-        "hemoglobin": None, 				# '血红蛋白(g/L)'
-        "platelets": None, 					# '血小板(×10^9/L)'
-        "white_blood_cells": None, 			# '白细胞(×10^9/L)'
-        "c_reactive_protein": None, 		# 'C反应蛋白(mg/L)'
-        "mycophenolic_acid_method": None, 	# '霉芬酸三点法'
-        "blood_glucose": None, 				# '血糖(mmol/L)'
-        "alt": None, 					    # '丙氨酸氨基转移酶(U/L)'
-        "ast": None, 					    # '天门冬氨酸氨基转移酶(U/L)'
-        "total_bilirubin": None, 			# '总胆红素(μmol/L)'
-        "direct_bilirubin": None, 			# '直接胆红素(μmol/L)'
-        "total_protein": None, 				# '总蛋白(g/L)'
-        "albumin": None, 					# '白蛋白(g/L)'
-        "urea": None, 					    # '尿素(mmol/L)'
-        "serum_creatinine_duplicate": None, # '血肌酐(重复项μmol/L)'
-        "glomerular_filtration_rate": None, # '肾小球滤过率(mL/min/1.73m²)'
-        "potassium": None, 					# '钾(mmol/L)'
-        "sodium": None, 					# '钠(mmol/L)'
-        "total_cholesterol": None, 			# '总胆固醇(mmol/L)'
-        "triglycerides": None, 				# '甘油三酯(mmol/L)'
-        "hdl_cholesterol": None, 			# '高密度脂蛋白胆固醇(mmol/L)'
-        "ldl_cholesterol": None, 			# '低密度脂蛋白胆固醇(mmol/L)'
-        "cmv_dna_load": None, 				# '巨细胞病毒DNA载量'
-        "blood_bkv": None, 					# '血BK病毒定性检测'
-        "blood_bkv_dna_load": None, 		# '血BK病毒DNA载量(copies/mL)'
-        "urine_protein": None, 				# '尿蛋白定性'
-        "urine_protein_24h": None, 			# '24小时尿蛋白定量(g/24h)'
-        "urine_bkv": None, 					# '尿BK病毒定性检测'
-        "urine_bkv_dna_load": None, 		# '尿BK病毒DNA载量(copies/mL)'
-        "pra_antibody": None, 				# 'PRA抗体'
-    }
 
     # 使用索引遍历，便于访问下一个元素
     i = 0
     while i < len(preds):
         item = preds[i]
         text = item[1][0]
+        print("text: ", text, "")
+        print("result_data: ", result_data, "")
+
+        # 有些指标和需要的指标关键字相同， 影响结果。
+        if "平均红细胞" in text:
+            print(f"非指标 keyword = " + text)
+            # 移动到下一个 item
+            i += 1
+            continue
 
         # 检查当前项是否包含目标指标名称
         for keyword, field in target_mapping.items():
-            if keyword in text:
+            if keyword in text or text in keyword:
+                print(f"命中 keyword = " + text)
                 # 找到指标名称后，尝试获取下一个 item 中的值
                 if i + 1 < len(preds):
                     next_item = preds[i + 1]
@@ -126,9 +132,8 @@ def ocr_by_path(img_path):
                         i += 1
                         break  # 跳出内层循环
 
-            # 移动到下一个 item
-            i += 1
-
+        # 移动到下一个 item
+        i += 1
 
     print(result_data)
 
