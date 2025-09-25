@@ -1,7 +1,8 @@
 from firecrawl import Firecrawl
 
 
-firecrawl = Firecrawl(api_key="fc-867f64e9458c4be48745cced28be1c0a")
+# 见配置文件；
+firecrawl = Firecrawl(api_key="fc-String")
 
 
 def scrap_sample(url):
