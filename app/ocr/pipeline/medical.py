@@ -143,7 +143,7 @@ def ocr_by_path(img_path):
 if __name__ == '__main__':
 
     # preds = ocr_by_url("https://p0.pipi.cn/mediaplus/bigdata_mmdb_mmdbtask/0fa3345bea45c249489a139250855171e8d67.png?imageView2/1/w/464/h/644")
-    preds = ocr_by_path("/Users/zhoudong/Pictures/jj/WechatIMG32.jpg")
+    preds = ocr_by_path("app/ocr/pipeline/tmp.png")
 
 
     # 列出指定目录下的所有.txt文件

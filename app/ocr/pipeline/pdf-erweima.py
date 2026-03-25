@@ -9,7 +9,7 @@ import cv2
 from PIL import Image
 import qrcode
 import pytesseract
-from performance.ocr.pipeline.ocr_subtitle import OcrSubtitlePipline
+from app.ocr.pipeline.ocr_subtitle import OcrSubtitlePipline
 
 
 # # pyzbar 不支持 python 3.11 及以上版本
