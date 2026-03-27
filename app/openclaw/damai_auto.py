@@ -33,21 +33,14 @@ def scan_qr_code(image_path):
 
 
 async def main():
+
     # 二维码图片路径
-    qr_image_path = "/Users/zhoudong/Downloads/damai/bangding.jpg"
-    
-    # 扫描二维码获取链接
-    try:
-        qr_url = scan_qr_code(qr_image_path)
-    except Exception as e:
-        print(f"❌ 二维码扫描失败: {e}")
-        return
-    
     # 个人信息
     personal_info = {
-        'real_name': '张三',
+        'qr_image_path': '/Users/zhoudong/Downloads/damai/bangding.jpg',
+        'real_name': '周栋',
         'id_number': '110101199001011234',
-        'code': '52122242',
+        'code': '12345678',
     }
     
     # 从 info.json 读取
@@ -79,6 +72,13 @@ async def main():
     else:
         print("✅ Chrome 未运行，将使用 Chrome 登录状态")
         playwright_user_data = chrome_user_data
+
+    # 扫描二维码获取链接
+    try:
+        qr_url = scan_qr_code(personal_info['qr_image_path'])
+    except Exception as e:
+        print(f"❌ 二维码扫描失败: {e}")
+        return
     
     try:
         # 启动浏览器
@@ -99,7 +99,7 @@ async def main():
         await asyncio.sleep(3)
         
         # 截图 - 初始状态
-        await page.screenshot(path=str(script_dir / 'step1_initial.png'), full_page=True)
+        await page.screenshot(path=str(script_dir / personal_info['code'] / 'step1_initial.png'), full_page=True)
         print("📸 step1_initial.png")
         
         title = await page.title()
@@ -107,45 +107,108 @@ async def main():
         
         # 自动点击接收按钮
         print("\n🔍 查找并点击接收按钮...")
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)  # 增加等待时间
         
-        accept_keywords = ['接收', '接受', '立即接收', '确认接收', '领取']
+        # 先尝试查找所有可能的按钮元素
+        print("  📋 查找页面上所有按钮...")
+        all_buttons = await page.query_selector_all('button, a.btn, div[class*="btn"], input[type="button"], input[type="submit"]')
+        print(f"  📊 找到 {len(all_buttons)} 个按钮元素")
+        
+        # 打印所有按钮的文本内容（调试用）
+        for idx, btn in enumerate(all_buttons[:10]):  # 只显示前10个
+            try:
+                text = await btn.text_content()
+                is_visible = await btn.is_visible()
+                print(f"    按钮 {idx}: '{text}' (可见: {is_visible})")
+            except:
+                pass
+        
+        accept_keywords = ['接收', '接受', '立即接收', '确认接收', '领取', '确定']
         clicked = False
         
         for keyword in accept_keywords:
             try:
+                print(f"\n  🔍 尝试查找包含 '{keyword}' 的元素...")
+                
+                # 使用更精确的选择器
                 selectors = [
                     f'button:has-text("{keyword}")',
+                    f'button >> :text("{keyword}")',
+                    f'[role="button"]:has-text("{keyword}")',
                     f'a:has-text("{keyword}")',
-                    f'div:has-text("{keyword}")',
-                    f':text("{keyword}")',
+                    f'div[class*="btn"]:has-text("{keyword}")',
+                    f':text-is("{keyword}")',
                 ]
                 
                 for selector in selectors:
                     try:
                         elements = await page.query_selector_all(selector)
                         if elements:
+                            print(f"    找到 {len(elements)} 个元素: {selector}")
                             for elem in elements:
                                 try:
-                                    if await elem.is_visible():
-                                        await elem.click()
-                                        print(f"  ✅ 已点击: {keyword}")
-                                        clicked = True
-                                        await asyncio.sleep(3)
-                                        break
-                                except:
+                                    is_visible = await elem.is_visible()
+                                    if is_visible:
+                                        # 滚动到元素
+                                        await elem.scroll_into_view_if_needed()
+                                        await asyncio.sleep(0.5)
+                                        
+                                        # 尝试多种点击方式
+                                        try:
+                                            # 方式1: 直接点击
+                                            await elem.click(timeout=3000)
+                                            print(f"    ✅ 已点击: {keyword} (方式1: 直接点击)")
+                                            clicked = True
+                                        except:
+                                            try:
+                                                # 方式2: 使用 JavaScript 点击
+                                                await page.evaluate('el => el.click()', elem)
+                                                print(f"    ✅ 已点击: {keyword} (方式2: JS点击)")
+                                                clicked = True
+                                            except:
+                                                try:
+                                                    # 方式3: 模拟鼠标点击
+                                                    await elem.dispatch_event('click')
+                                                    print(f"    ✅ 已点击: {keyword} (方式3: 事件点击)")
+                                                    clicked = True
+                                                except:
+                                                    continue
+                                        
+                                        if clicked:
+                                            await asyncio.sleep(3)
+                                            break
+                                except Exception as e:
+                                    print(f"    ⚠️ 元素点击失败: {e}")
                                     continue
                         if clicked:
                             break
-                    except:
+                    except Exception as e:
                         continue
                 if clicked:
                     break
             except:
                 continue
         
+        # 如果所有选择器都没找到，尝试通过文本内容查找
+        if not clicked:
+            print("\n  🔍 尝试通过文本内容查找...")
+            for btn in all_buttons:
+                try:
+                    text = await btn.text_content()
+                    if text and any(keyword in text for keyword in accept_keywords):
+                        if await btn.is_visible():
+                            await btn.scroll_into_view_if_needed()
+                            await asyncio.sleep(0.5)
+                            await btn.click()
+                            print(f"    ✅ 已点击: '{text}'")
+                            clicked = True
+                            await asyncio.sleep(3)
+                            break
+                except:
+                    continue
+        
         # 截图 - 点击接收后
-        await page.screenshot(path=str(script_dir / 'step2_after_accept.png'), full_page=True)
+        await page.screenshot(path=str(script_dir / personal_info['code'] / 'step2_after_accept.png'), full_page=True)
         print("📸 step2_after_accept.png")
         
         # 判断是否进入登录页
@@ -168,7 +231,7 @@ async def main():
                 current_url = page.url
                 current_title = await page.title()
                 
-                if '登录' not in current_title:
+                if '登录' not in current_title and 'login' not in current_url.lower():
                     print("\n✅ 登录成功，继续执行...")
                     await asyncio.sleep(2)
                     break
@@ -206,7 +269,7 @@ async def main():
         try:
             code_input = await page.wait_for_selector('input[placeholder*="领取码"]', timeout=5000)
             if code_input:
-                code = personal_info.get('code', '52122242')
+                code = personal_info.get('code', '12345678')
                 await code_input.fill(code)
                 print(f"  ✅ 领取码: {code}")
                 await asyncio.sleep(0.5)
@@ -214,7 +277,7 @@ async def main():
             print(f"  ⚠️ 领取码填写失败: {e}")
         
         # 截图 - 填写后
-        await page.screenshot(path=str(script_dir / 'step3_filled.png'), full_page=True)
+        await page.screenshot(path=str(script_dir / personal_info['code'] / 'step3_filled.png'), full_page=True)
         print("📸 step3_filled.png")
         
         # 自动点击确认按钮
@@ -242,7 +305,7 @@ async def main():
                                     if await elem.is_visible():
                                         await elem.scroll_into_view_if_needed()
                                         await asyncio.sleep(0.5)
-                                        # await elem.click()
+                                        await elem.click()
                                         print(f"  ✅ 已点击: {keyword}")
                                         submitted = True
                                         await asyncio.sleep(3)
@@ -259,7 +322,7 @@ async def main():
                 continue
         
         # 截图 - 提交后
-        await page.screenshot(path=str(script_dir / 'step4_submitted.png'), full_page=True)
+        await page.screenshot(path=str(script_dir / personal_info['code'] / 'step4_submitted.png'), full_page=True)
         print("📸 step4_submitted.png")
         
         print("\n" + "="*60)
