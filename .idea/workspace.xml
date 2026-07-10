@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="7601cef3-c86c-4387-9068-74b8487de747" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ocr/260315-damai/damai_ocr.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ocr/260315-damai/damai_ocr.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,32 +60,32 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/zhoudong/projects/python/my-flask-app/app/openclaw",
+    "last_opened_file_path": "/Users/zhoudong/projects/python/my-flask-app/app/spiders/AI",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/spiders/AI" />
       <recent name="$PROJECT_DIR$/app/openclaw" />
       <recent name="$PROJECT_DIR$/app/scripts" />
       <recent name="$PROJECT_DIR$/app/spiders/fire_crawl" />
       <recent name="$PROJECT_DIR$/app/ocr" />
-      <recent name="$PROJECT_DIR$/app/ocr/pipeline" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/spiders/AI/steamdb" />
       <recent name="$PROJECT_DIR$/app/ocr" />
       <recent name="$PROJECT_DIR$/app/spiders" />
       <recent name="$PROJECT_DIR$/youtube" />
       <recent name="$PROJECT_DIR$/spider/myfutu" />
-      <recent name="$PROJECT_DIR$/performance/orders" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.damai_auto">
+  <component name="RunManager" selected="Python.scrape_steamdb">
     <configuration name="damai_auto" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="my-flask-app" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -153,50 +152,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="damai_auto_v3" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="my-flask-app" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/openclaw" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/openclaw/damai_auto_v3.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="damai_ticket_receive" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="my-flask-app" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/openclaw" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/openclaw/damai_ticket_receive.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="scripts" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -219,13 +174,57 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="monitor_xhs_users" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="my-flask-app" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/spiders/AI" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/spiders/AI/monitor_xhs_users.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scrape_steamdb" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="my-flask-app" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app/spiders/AI/steamdb" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/spiders/AI/steamdb/scrape_steamdb.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.scrape_steamdb" />
+        <item itemvalue="Python.monitor_xhs_users" />
         <item itemvalue="Python.damai_auto" />
         <item itemvalue="Python.damai_auto_final_v2" />
         <item itemvalue="Python.damai_auto_final_v1" />
-        <item itemvalue="Python.damai_auto_v3" />
-        <item itemvalue="Python.damai_ticket_receive" />
       </list>
     </recent_temporary>
   </component>
@@ -283,7 +282,8 @@
       <workItem from="1766479952671" duration="1739000" />
       <workItem from="1766497805549" duration="3872000" />
       <workItem from="1770631970919" duration="12932000" />
-      <workItem from="1772786313850" duration="21998000" />
+      <workItem from="1772786313850" duration="34703000" />
+      <workItem from="1783566680545" duration="14545000" />
     </task>
     <servers />
   </component>
@@ -423,6 +423,11 @@
           <line>101</line>
           <option name="timeStamp" value="220" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/spiders/AI/steamdb/scrape_steamdb.py</url>
+          <line>158</line>
+          <option name="timeStamp" value="222" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -451,10 +456,12 @@
     <SUITE FILE_PATH="coverage/scripts$performance.coverage" NAME="performance Coverage Results" MODIFIED="1696751973458" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/my_flask_app$ocr_subtitle.coverage" NAME="ocr_subtitle Coverage Results" MODIFIED="1750819916254" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/ocr/pipeline" />
     <SUITE FILE_PATH="coverage/my_flask_app$damai_ocr_openclaw.coverage" NAME="damai_ocr_openclaw Coverage Results" MODIFIED="1774437000916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/ocr/260315-damai" />
+    <SUITE FILE_PATH="coverage/my_flask_app$monitor_xhs_users.coverage" NAME="monitor_xhs_users Coverage Results" MODIFIED="1777367655920" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders/AI" />
     <SUITE FILE_PATH="coverage/my_flask_app$maoyan_box_doubao.coverage" NAME="maoyan_box_deepseek Coverage Results" MODIFIED="1772099653654" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders/fire_crawl" />
     <SUITE FILE_PATH="coverage/my_flask_app$dynamic_loading.coverage" NAME="dynamic_loading Coverage Results" MODIFIED="1772519387258" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders" />
     <SUITE FILE_PATH="coverage/scripts$login.coverage" NAME="login Coverage Results" MODIFIED="1736329938995" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/performance/orders" />
     <SUITE FILE_PATH="coverage/scripts$draw_kline.coverage" NAME="draw_kline Coverage Results" MODIFIED="1745381027118" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/spider/myfutu" />
+    <SUITE FILE_PATH="coverage/my_flask_app$scrape_steamdb.coverage" NAME="scrape_steamdb Coverage Results" MODIFIED="1783651783984" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders/AI/steamdb" />
     <SUITE FILE_PATH="coverage/my_flask_app$0808_cirea.coverage" NAME="0808-cirea Coverage Results" MODIFIED="1754624462005" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders" />
     <SUITE FILE_PATH="coverage/my_flask_app$download.coverage" NAME="download Coverage Results" MODIFIED="1766480390947" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/scripts" />
     <SUITE FILE_PATH="coverage/my_flask_app$maoyan_box_zhipu.coverage" NAME="maoyan_box_zhipu Coverage Results" MODIFIED="1772521385812" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders/fire_crawl" />
@@ -463,7 +470,7 @@
     <SUITE FILE_PATH="coverage/my_flask_app$scrape_hfrea.coverage" NAME="scrape_hfrea Coverage Results" MODIFIED="1754623420914" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders" />
     <SUITE FILE_PATH="coverage/my_flask_app$damai_auto_final_v1.coverage" NAME="damai_auto_final_v1 Coverage Results" MODIFIED="1774602182824" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/openclaw" />
     <SUITE FILE_PATH="coverage/scripts$tiktok_captcha.coverage" NAME="tiktok_captcha Coverage Results" MODIFIED="1744724400982" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/rotate_captcha" />
-    <SUITE FILE_PATH="coverage/my_flask_app$damai_auto.coverage" NAME="damai_auto Coverage Results" MODIFIED="1774605236405" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/openclaw" />
+    <SUITE FILE_PATH="coverage/my_flask_app$damai_auto.coverage" NAME="damai_auto Coverage Results" MODIFIED="1775787840421" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/openclaw" />
     <SUITE FILE_PATH="coverage/my_flask_app$maoyan_piaofang.coverage" NAME="maoyan_piaofang Coverage Results" MODIFIED="1772101162979" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/spiders/fire_crawl" />
     <SUITE FILE_PATH="coverage/scripts$zhaobin.coverage" NAME="zhaobin Coverage Results" MODIFIED="1741246358567" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/spider" />
     <SUITE FILE_PATH="coverage/my_flask_app$list_dir_files.coverage" NAME="list_dir_files Coverage Results" MODIFIED="1752028504896" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/tools" />
