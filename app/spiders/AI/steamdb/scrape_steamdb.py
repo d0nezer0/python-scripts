@@ -17,7 +17,7 @@ import requests
 # 当前文件所在目录
 # CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # CSV_PATH = os.path.join(CURRENT_DIR, "py_steam_aug_comingsoon.csv")
-CSV_PATH = "/Users/zhoudong/tmp/steam_aug_comingsoon_test.csv"
+CSV_PATH = "/Users/zhoudong/tmp/steam_aug_comingsoon.csv"
 
 # 代理配置
 PROXY_URL = "https://dps.kdlapi.com/api/getdps/?orderid=906160381754999&num=500&pt=1&f_et=1&format=json&sep=1&f_loc=1"
@@ -51,7 +51,7 @@ def fetch_steamdb_app_info(appid: str | int) -> dict:
     return response.json()
 
 
-def fetch_with_proxy(appid: str | int, max_retries: int = 3) -> dict | None:
+def fetch_with_proxy(appid: str | int, max_retries: int = 5) -> dict | None:
     """
     使用代理获取 SteamDB 应用信息，带重试机制
 
@@ -76,31 +76,40 @@ def fetch_with_proxy(appid: str | int, max_retries: int = 3) -> dict | None:
 
     for attempt in range(1, max_retries + 1):
         try:
-            # 每次请求获取新的代理
-            proxy_resp = requests.get(PROXY_URL, timeout=10)
-            proxy_resp.raise_for_status()
-            proxy_data = proxy_resp.json()
-            proxy_list = proxy_data.get("data", {}).get("proxy_list", [])
-            if not proxy_list:
-                print(f"  [重试 {attempt}/{max_retries}] appid={appid} 代理列表为空")
-                continue
-            proxy_item = random.choice(proxy_list)
-            proxy_ip = proxy_item.split(",")[0]
-            # 检查代理 IP 格式，如果格式不对则不用代理
-            # proxy_ip = proxy_resp.text.strip()
-            proxy_pattern = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$"
-            if re.match(proxy_pattern, proxy_ip):
-                proxies = {
-                    "http": f"http://{PROXY_AUTH}@{proxy_ip}",
-                    "https": f"http://{PROXY_AUTH}@{proxy_ip}",
-                }
-                response = requests.get(url, headers=headers, proxies=proxies, timeout=30)
-            else:
-                print(f"  代理 IP 格式无效: {proxy_ip}，跳过代理")
+            # 如果是最后一次尝试，不用代理，直接请求
+            if attempt == max_retries:
+                print(f"  [最后一次尝试] appid={appid} 直连请求...")
                 response = requests.get(url, headers=headers, timeout=30)
+            else:
+                # 每次请求获取新的代理
+                proxy_resp = requests.get(PROXY_URL, timeout=10)
+                proxy_resp.raise_for_status()
+                proxy_data = proxy_resp.json()
+                proxy_list = proxy_data.get("data", {}).get("proxy_list", [])
+                if not proxy_list:
+                    print(f"  [重试 {attempt}/{max_retries}] appid={appid} 代理列表为空")
+                    continue
+                proxy_item = random.choice(proxy_list)
+                proxy_ip = proxy_item.split(",")[0]
+                # 检查代理 IP 格式，如果格式不对则不用代理
+                # proxy_ip = proxy_resp.text.strip()
+                proxy_pattern = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$"
+                if re.match(proxy_pattern, proxy_ip):
+                    proxies = {
+                        "http": f"http://{PROXY_AUTH}@{proxy_ip}",
+                        "https": f"http://{PROXY_AUTH}@{proxy_ip}",
+                    }
+                    response = requests.get(url, headers=headers, proxies=proxies, timeout=30)
+                else:
+                    print(f"  代理 IP 格式无效: {proxy_ip}，跳过代理")
+                    response = requests.get(url, headers=headers, timeout=30)
 
             response.raise_for_status()
             data = response.json()
+
+            # 如果返回 {"success":false}，返回字符串 "无"
+            if data.get("success") is False:
+                return "无"
 
             # 检查 f 字段是否正常（存在且为数字）
             f_value = data.get("data", {}).get("f")
@@ -158,14 +167,14 @@ def process_csv():
     print(f"昨日 releaseDate 列: {yesterday_release_col}")
     print(f"昨日 followers 列: {yesterday_followers_col}")
 
-    # 读取 CSV
+    # 读取 CSV 获取字段名和数据
     with open(CSV_PATH, mode="r", newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         fieldnames = reader.fieldnames.copy()
         rows = list(reader)
 
-    print(f"\n读取到 {len(rows)} 行数据")
     print(f"当前字段: {fieldnames}")
+    print(f"读取到 {len(rows)} 行数据")
 
     # 检查并添加今日字段
     need_add_today_release = today_release_col not in fieldnames
@@ -178,30 +187,53 @@ def process_csv():
         fieldnames.append(today_followers_col)
         print(f"新增字段: {today_followers_col}")
 
-    # 先写入表头（覆盖原文件）
-    with open(CSV_PATH, mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
+    # 如果新增了字段，需要重写表头+全部数据
+    need_rewrite = need_add_today_release or need_add_today_followers
+    if need_rewrite:
+        with open(CSV_PATH, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+        print("表头已更新，数据已重写")
 
-    # 遍历每一行处理
+    # 临时文件路径
+    tmp_csv_path = CSV_PATH + ".tmp"
+
+    # 遍历每一行处理，处理完写入临时文件
     updated_count = 0
     skipped_count = 0
     api_fail_count = 0
     alarm_count = 0
 
+    # 先写入表头到临时文件
+    with open(tmp_csv_path, mode="w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
     for i, row in enumerate(rows):
         app_id = row.get("id", "").strip()
         yesterday_release = row.get(yesterday_release_col, "").strip()
         yesterday_followers = row.get(yesterday_followers_col, "").strip()
+        today_followers = row.get(today_followers_col, "").strip()
 
         print(f"\n--- 行 {i + 1}: appid={app_id}, name={row.get('name', '')} ---")
+
+        # 如果今日已有 followers 值（且不是默认的"无"），跳过
+        if today_followers and today_followers != "无":
+            print(f"  跳过: 今日已有 followers 值 ('{today_followers}')")
+            skipped_count += 1
+            # 追加写入临时文件
+            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writerow(row)
+            continue
 
         # 检查昨日的 releaseDate 是否为带小时的 UTC 时间
         if not is_utc_time_format(yesterday_release):
             print(f"  跳过: releaseDate 不是具体 UTC 时间 ('{yesterday_release}')")
             skipped_count += 1
-            # 单行写入
-            with open(CSV_PATH, mode="a", newline="", encoding="utf-8") as f:
+            # 追加写入临时文件
+            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerow(row)
             continue
@@ -213,36 +245,38 @@ def process_csv():
 
         # 通过 API 获取 followers (f 字段)
         print(f"  正在通过 API 获取 followers...")
-        data = fetch_with_proxy(app_id)
+        result = fetch_with_proxy(app_id)
 
-        if data is None:
+        if result is None:
             print(f"  API 请求失败，跳过 followers 更新")
             api_fail_count += 1
             # 报警：昨天有 followers 值，今天没获取到
             if yesterday_followers:
                 print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 请求失败")
                 alarm_count += 1
-            # 单行写入
-            with open(CSV_PATH, mode="a", newline="", encoding="utf-8") as f:
+            # 追加写入临时文件
+            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerow(row)
             continue
 
-        # 检查是否返回 {"success":false}
-        if data.get("success") is False:
+        # 检查是否返回字符串 "无"（对应 API 返回 success=false）
+        if result == "无":
             print(f"  API 返回 success=false，followers 填入 '无'")
             row[today_followers_col] = "无"
             # 报警：昨天有 followers 值，今天返回 false
             if yesterday_followers:
+                row[today_followers_col] = "昨天有今天无"
                 print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 返回 success=false")
                 alarm_count += 1
-            # 单行写入
-            with open(CSV_PATH, mode="a", newline="", encoding="utf-8") as f:
+            # 追加写入临时文件
+            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerow(row)
             continue
 
-        f_value = data.get("data", {}).get("f")
+        # 正常返回 data 字典，提取 f 值
+        f_value = result.get("data", {}).get("f")
 
         # 检查 f 值是否正常
         if f_value is not None and isinstance(f_value, (int, float)):
@@ -257,10 +291,13 @@ def process_csv():
                 print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 f 字段异常={f_value}")
                 alarm_count += 1
 
-        # 单行写入
-        with open(CSV_PATH, mode="a", newline="", encoding="utf-8") as f:
+        # 追加写入临时文件
+        with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writerow(row)
+
+    # 全部处理完成，用临时文件替换原文件
+    os.replace(tmp_csv_path, CSV_PATH)
 
     print(f"\n{'=' * 50}")
     print(f"处理完成!")
