@@ -77,7 +77,7 @@ def fetch_with_proxy(appid: str | int, max_retries: int = 5) -> dict | None:
     for attempt in range(1, max_retries + 1):
         try:
             # 如果是最后一次尝试，不用代理，直接请求
-            if attempt == max_retries:
+            if attempt > 3:
                 print(f"  [最后一次尝试] appid={appid} 直连请求...")
                 response = requests.get(url, headers=headers, timeout=30)
             else:
@@ -167,8 +167,8 @@ def process_csv():
     print(f"昨日 releaseDate 列: {yesterday_release_col}")
     print(f"昨日 followers 列: {yesterday_followers_col}")
 
-    # 读取 CSV 获取字段名和数据
-    with open(CSV_PATH, mode="r", newline="", encoding="utf-8") as f:
+    # 读取 CSV 获取字段名和数据（使用 utf-8-sig 自动去除 BOM）
+    with open(CSV_PATH, mode="r", newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         fieldnames = reader.fieldnames.copy()
         rows = list(reader)
@@ -265,8 +265,8 @@ def process_csv():
             print(f"  API 返回 success=false，followers 填入 '无'")
             row[today_followers_col] = "无"
             # 报警：昨天有 followers 值，今天返回 false
-            if yesterday_followers:
-                row[today_followers_col] = "昨天有今天无"
+            if yesterday_followers and yesterday_followers != "无":
+                row[today_followers_col] = yesterday_followers
                 print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 返回 success=false")
                 alarm_count += 1
             # 追加写入临时文件
