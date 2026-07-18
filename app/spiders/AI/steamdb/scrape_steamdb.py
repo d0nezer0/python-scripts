@@ -121,7 +121,7 @@ def fetch_with_proxy(appid: str | int, max_retries: int = 5) -> dict | None:
             print(f"  [重试 {attempt}/{max_retries}] appid={appid} 请求失败: {e}")
 
         if attempt < max_retries:
-            time.sleep(1)
+            time.sleep(0.2)
 
     return None
 
