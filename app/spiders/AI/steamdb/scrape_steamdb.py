@@ -14,6 +14,10 @@ from datetime import datetime
 
 import requests
 
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import discover_aug
+
 # 当前文件所在目录
 # CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # CSV_PATH = os.path.join(CURRENT_DIR, "py_steam_aug_comingsoon.csv")
@@ -228,17 +232,8 @@ def process_csv():
                 writer.writerow(row)
             continue
 
-        # 检查昨日的 releaseDate 是否为带小时的 UTC 时间
-        if not is_utc_time_format(yesterday_release):
-            print(f"  跳过: releaseDate 不是具体 UTC 时间 ('{yesterday_release}')")
-            skipped_count += 1
-            # 追加写入临时文件
-            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow(row)
-            continue
-
-        print(f"  releaseDate 是具体 UTC 时间: {yesterday_release}")
+        # 全量抓取：所有行都尝试获取 followers
+        print(f"  releaseDate: {yesterday_release}")
 
         # 复制 releaseDate 到今日列
         row[today_release_col] = yesterday_release
@@ -311,6 +306,17 @@ def process_csv():
 
 
 def main():
+    # 第一步， 新游戏发现；
+    print("=" * 50)
+    print("第一步：发现 8 月新游戏...")
+    print("=" * 50)
+    discover_aug.main(csv_path=CSV_PATH)
+
+    # 第二步， 全量 followers 抓取；
+    print("\n" + "=" * 50)
+    print("第二步：全量 followers 抓取...")
+    print("=" * 50)
+
     # 开始抓取时间
     start_time = datetime.now()
     print(f"开始时间: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")

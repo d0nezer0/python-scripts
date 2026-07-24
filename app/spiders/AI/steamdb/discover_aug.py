@@ -19,11 +19,12 @@
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 import time
 import urllib.request
-from datetime import date
+from datetime import date, datetime
 
 CSV_DEFAULT = "/Users/zhoudong/tmp/steam_aug_comingsoon.csv"
 EN_MONTHS = {
@@ -113,25 +114,66 @@ def is_aug_2026(cn_date):
     return bool(re.search(r"2026\s*年\s*8\s*月", cn_date or ""))
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--csv", default=CSV_DEFAULT)
-    ap.add_argument("--dry-run", action="store_true", help="只报告，不写入")
-    args = ap.parse_args()
+def is_aug_18_20(en_date):
+    """判断英文日期是否在 2026 年 8 月 18 日 ~ 20 日之间"""
+    m = re.search(r"^(\d{1,2})\s+(\w{3})\s*,\s*(\d{4})$", (en_date or "").strip())
+    if not m:
+        return False
+    day, mon, year = int(m.group(1)), m.group(2), int(m.group(3))
+    if year != 2026 or mon != "Aug":
+        return False
+    return 18 <= day <= 20
 
-    # 读现有 id
+
+def log_important_games(games, log_dir=None):
+    """将 8 月 18~20 日的重要游戏写入 log 文件并打印报警"""
+    if not games:
+        return
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    print(f"\n{'=' * 50}")
+    print(f"[报警] 发现 {len(games)} 个 8 月 18~20 日重要游戏！")
+    print(f"{'=' * 50}")
+    for appid, name, en_date in games:
+        print(f"  appid={appid} | {name} | {en_date}")
+
+    if log_dir is None:
+        log_dir = os.path.dirname(os.path.abspath(__file__))
+    log_path = os.path.join(log_dir, "important_games.log")
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(f"\n--- {today_str} ---\n")
+        for appid, name, en_date in games:
+            f.write(f"{appid},{name},{en_date}\n")
+    print(f"[报警] 已写入日志: {log_path}")
+
+
+def main(csv_path=None, dry_run=False):
+    """主入口，支持外部调用传参（避免 argparse 冲突）"""
+    if csv_path is None:
+        ap = argparse.ArgumentParser()
+        ap.add_argument("--csv", default=CSV_DEFAULT)
+        ap.add_argument("--dry-run", action="store_true", help="只报告，不写入")
+        args = ap.parse_args()
+        csv_path = args.csv
+        dry_run = args.dry_run
+
+    # 读现有 id 和已有日期
     existing = set()
+    existing_rows = {}  # appid -> row(list)
     header = None
-    with open(args.csv, newline="", encoding="utf-8") as f:
+    with open(csv_path, newline="", encoding="utf-8") as f:
         rd = csv.reader(f)
         header = next(rd)
         for row in rd:
             if row:
                 existing.add(row[0])
+                existing_rows[row[0]] = row
     width = len(header)
 
     # 扫描 coming-soon（升序），收集 8 月条目
     found = {}  # appid -> (name, en_date)
+    important = []  # 8 月 18~20 日的重要游戏
+    date_changed = []  # (appid, name, old_date, new_date)
     seen_aug = False
     skipped_pages = []
     start = 0
@@ -152,9 +194,18 @@ def main():
             ym_list.append(date_ym(cn_date))
             if is_aug_2026(cn_date):
                 seen_aug = True
+                en_date = cn_date_to_en(cn_date)
                 if appid not in found:
-                    found[appid] = (name, cn_date_to_en(cn_date))
+                    found[appid] = (name, en_date)
                     page_aug += 1
+                # 检查是否在 8 月 18~20 日
+                if is_aug_18_20(en_date):
+                    important.append((appid, name, en_date))
+                # 检查已存在游戏的日期是否变更
+                if appid in existing:
+                    old_date = existing_rows[appid][2].strip()
+                    if old_date and old_date != en_date:
+                        date_changed.append((appid, name, old_date, en_date))
         # 停止判定：已见过 8 月，且本页零 8 月匹配，且本页所有日期都 >= 2026-09
         past_aug = all((y, mo) >= (2026, 9) for (y, mo) in ym_list) if ym_list else False
         if seen_aug and page_aug == 0 and past_aug:
@@ -171,7 +222,7 @@ def main():
         row += [""] * (width - len(row))
         rows_to_add.append(row)
 
-    if args.dry_run:
+    if dry_run:
         print(f"[dry-run] 扫描到 8 月候选 {len(found)} 个；CSV 已有 {len(existing)} 个 id")
         print(f"[dry-run] 将新增 {len(rows_to_add)} 个：")
         for r in rows_to_add[:20]:
@@ -183,15 +234,63 @@ def main():
         return
 
     if rows_to_add:
-        with open(args.csv, "a", newline="", encoding="utf-8") as f:
+        with open(csv_path, "a", newline="", encoding="utf-8") as f:
             w = csv.writer(f)
             for r in rows_to_add:
                 w.writerow(r)
-        print(f"已追加 {len(rows_to_add)} 个新 8 月游戏到 {args.csv}")
+        print(f"已追加 {len(rows_to_add)} 个新 8 月游戏到 {csv_path}")
     else:
         print("无需追加：未发现有缺失的 8 月新游戏")
     if skipped_pages:
         print(f"警告：以下页请求失败被跳过 start={skipped_pages}（可重跑补齐）")
+
+    # 报警 8 月 18~20 日的重要游戏
+    log_important_games(important)
+
+    # 处理日期变更：更新 CSV、报警、写日志
+    if date_changed:
+        # 去重（同一个 appid 可能出现在多页，保留最后一次变更）
+        seen_ids = set()
+        unique_changed = []
+        for appid, name, old_date, new_date in reversed(date_changed):
+            if appid not in seen_ids:
+                seen_ids.add(appid)
+                unique_changed.append((appid, name, old_date, new_date))
+        unique_changed.reverse()
+
+        # 更新 CSV 中的 release_date
+        all_rows = []
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            rd = csv.reader(f)
+            all_rows.append(next(rd))  # header
+            for row in rd:
+                if row:
+                    appid = row[0]
+                    for aid, _, _, nd in unique_changed:
+                        if aid == appid:
+                            row[2] = nd
+                            break
+                    all_rows.append(row)
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerows(all_rows)
+
+        # 报警输出
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        print(f"\n{'=' * 50}")
+        print(f"[报警] 发现 {len(unique_changed)} 个游戏日期发生变更！")
+        print(f"{'=' * 50}")
+        for appid, name, old_date, new_date in unique_changed:
+            print(f"  appid={appid} | {name} | {old_date} -> {new_date}")
+
+        # 写入日期变更日志
+        log_dir = os.path.dirname(os.path.abspath(__file__))
+        log_path = os.path.join(log_dir, "date_changed.log")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n--- {today_str} ---\n")
+            for appid, name, old_date, new_date in unique_changed:
+                f.write(f"{appid},{name},{old_date},{new_date}\n")
+        print(f"[报警] 日期变更已写入日志: {log_path}")
 
 
 if __name__ == "__main__":
