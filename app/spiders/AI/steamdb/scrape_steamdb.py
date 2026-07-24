@@ -121,7 +121,7 @@ def fetch_with_proxy(appid: str | int, max_retries: int = 5) -> dict | None:
             print(f"  [重试 {attempt}/{max_retries}] appid={appid} 请求失败: {e}")
 
         if attempt < max_retries:
-            time.sleep(0.2)
+            time.sleep(0.1)
 
     return None
 
@@ -247,19 +247,6 @@ def process_csv():
         print(f"  正在通过 API 获取 followers...")
         result = fetch_with_proxy(app_id)
 
-        if result is None:
-            print(f"  API 请求失败，跳过 followers 更新")
-            api_fail_count += 1
-            # 报警：昨天有 followers 值，今天没获取到
-            if yesterday_followers:
-                print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 请求失败")
-                alarm_count += 1
-            # 追加写入临时文件
-            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow(row)
-            continue
-
         # 检查是否返回字符串 "无"（对应 API 返回 success=false）
         if result == "无":
             print(f"  API 返回 success=false，followers 填入 '无'")
@@ -268,6 +255,20 @@ def process_csv():
             if yesterday_followers and yesterday_followers != "无":
                 row[today_followers_col] = yesterday_followers
                 print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 返回 success=false")
+                alarm_count += 1
+            # 追加写入临时文件
+            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writerow(row)
+            continue
+        if result is None:
+            print(f"  API 请求失败，跳过 followers 更新")
+            row[today_followers_col] = "无"
+            api_fail_count += 1
+            # 报警：昨天有 followers 值，今天没获取到
+            if yesterday_followers and yesterday_followers != "无":
+                row[today_followers_col] = yesterday_followers
+                print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 请求失败")
                 alarm_count += 1
             # 追加写入临时文件
             with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
