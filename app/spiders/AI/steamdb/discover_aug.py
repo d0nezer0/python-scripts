@@ -38,6 +38,18 @@ SEARCH_URL = (
 )
 
 
+def _build_opener():
+    """根据环境变量 HTTP_PROXY / HTTPS_PROXY 创建 opener（支持代理）。"""
+    proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or ""
+    if proxy:
+        handler = urllib.request.ProxyHandler({"http": proxy, "https": proxy})
+        return urllib.request.build_opener(handler)
+    return urllib.request.build_opener()
+
+
+_OPENER = _build_opener()
+
+
 def fetch_json(url, tries=10):
     req = urllib.request.Request(
         url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
@@ -45,7 +57,7 @@ def fetch_json(url, tries=10):
     last = None
     for i in range(tries):
         try:
-            with urllib.request.urlopen(req, timeout=45) as r:
+            with _OPENER.open(req, timeout=45) as r:
                 return json.loads(r.read().decode("utf-8", "ignore"))
         except Exception as e:  # noqa: BLE001
             last = e
@@ -54,7 +66,7 @@ def fetch_json(url, tries=10):
     return {}
 
 
-def cn_date_to_en(s):
+def cn_date_to_en(s, debug=False):
     """把 '2026 年 8 月 13 日' / '2026 年 8 月' / '2026 年 8 月下旬' 转英文。"""
     s = (s or "").strip()
     if not s:
@@ -64,9 +76,13 @@ def cn_date_to_en(s):
         s,
     )
     if not m:
+        if debug:
+            sys.stderr.write(f"[debug] cn_date_to_en 无法解析: '{s}'\n")
         return s  # 已是英文或无法解析，原样返回
     year, mon = m.group(1), EN_MONTHS.get(m.group(2), m.group(2))
     qual, day = m.group(3), m.group(4)
+    if debug:
+        sys.stderr.write(f"[debug] cn_date_to_en 输入='{s}' -> year={year}, mon={mon}, qual={qual}, day={day}\n")
     base = f"{int(day)} {mon}, {year}" if day else f"{mon} {year}"
     if qual in ("上旬", "上"):
         base = "Early " + base
@@ -174,6 +190,7 @@ def main(csv_path=None, dry_run=False):
     found = {}  # appid -> (name, en_date)
     important = []  # 8 月 18~20 日的重要游戏
     date_changed = []  # (appid, name, old_date, new_date)
+    name_changed = []  # (appid, old_name, new_name, en_date)
     seen_aug = False
     skipped_pages = []
     start = 0
@@ -206,6 +223,11 @@ def main(csv_path=None, dry_run=False):
                     old_date = existing_rows[appid][2].strip()
                     if old_date and old_date != en_date:
                         date_changed.append((appid, name, old_date, en_date))
+                # 检查已存在游戏的名称是否变更
+                if appid in existing:
+                    old_name = existing_rows[appid][1].strip()
+                    if old_name and old_name != name:
+                        name_changed.append((appid, old_name, name, en_date))
         # 停止判定：已见过 8 月，且本页零 8 月匹配，且本页所有日期都 >= 2026-09
         past_aug = all((y, mo) >= (2026, 9) for (y, mo) in ym_list) if ym_list else False
         if seen_aug and page_aug == 0 and past_aug:
@@ -291,6 +313,51 @@ def main(csv_path=None, dry_run=False):
             for appid, name, old_date, new_date in unique_changed:
                 f.write(f"{appid},{name},{old_date},{new_date}\n")
         print(f"[报警] 日期变更已写入日志: {log_path}")
+
+    # 处理名称变更：更新 CSV、报警、写日志
+    if name_changed:
+        # 去重（同一个 appid 可能出现在多页，保留最后一次变更）
+        seen_ids = set()
+        unique_name_changed = []
+        for appid, old_name, new_name, en_date in reversed(name_changed):
+            if appid not in seen_ids:
+                seen_ids.add(appid)
+                unique_name_changed.append((appid, old_name, new_name, en_date))
+        unique_name_changed.reverse()
+
+        # 更新 CSV 中的 name
+        all_rows = []
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            rd = csv.reader(f)
+            all_rows.append(next(rd))  # header
+            for row in rd:
+                if row:
+                    appid = row[0]
+                    for aid, _, new_name, _ in unique_name_changed:
+                        if aid == appid:
+                            row[1] = new_name
+                            break
+                    all_rows.append(row)
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerows(all_rows)
+
+        # 报警输出
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        print(f"\n{'=' * 50}")
+        print(f"[报警] 发现 {len(unique_name_changed)} 个游戏名称发生变更！")
+        print(f"{'=' * 50}")
+        for appid, old_name, new_name, en_date in unique_name_changed:
+            print(f"  appid={appid} | '{old_name}' -> '{new_name}' | {en_date}")
+
+        # 写入名称变更日志
+        log_dir = os.path.dirname(os.path.abspath(__file__))
+        log_path = os.path.join(log_dir, "name_changed.log")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n--- {today_str} ---\n")
+            for appid, old_name, new_name, en_date in unique_name_changed:
+                f.write(f"{appid},{old_name},{new_name},{en_date}\n")
+        print(f"[报警] 名称变更已写入日志: {log_path}")
 
 
 if __name__ == "__main__":
