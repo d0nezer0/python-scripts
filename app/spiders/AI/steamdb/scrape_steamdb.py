@@ -215,15 +215,15 @@ def process_csv():
         writer.writeheader()
 
     for i, row in enumerate(rows):
-        app_id = row.get("id", "").strip()
-        yesterday_release = row.get(yesterday_release_col, "").strip()
-        yesterday_followers = row.get(yesterday_followers_col, "").strip()
-        today_followers = row.get(today_followers_col, "").strip()
+        app_id = (row.get("id") or "").strip()
+        yesterday_release = (row.get(yesterday_release_col) or "").strip()
+        yesterday_followers = (row.get(yesterday_followers_col) or "").strip()
+        today_followers = (row.get(today_followers_col) or "").strip()
 
         print(f"\n--- 行 {i + 1}: appid={app_id}, name={row.get('name', '')} ---")
 
         # 如果今日已有 followers 值（且不是默认的"无"），跳过
-        if today_followers and today_followers != "无":
+        if today_followers:
             print(f"  跳过: 今日已有 followers 值 ('{today_followers}')")
             skipped_count += 1
             # 追加写入临时文件
@@ -310,7 +310,7 @@ def main():
     print("=" * 50)
     print("第一步：发现 8 月新游戏...")
     print("=" * 50)
-    discover_aug.main(csv_path=CSV_PATH)
+    # discover_aug.main(csv_path=CSV_PATH)
 
     # 第二步， 全量 followers 抓取；
     print("\n" + "=" * 50)

@@ -78,7 +78,7 @@ def get_latest_followers(row: list[str]) -> tuple[int, str]:
 
 def main(csv_path: str = "/Users/zhoudong/tmp/steam_aug_comingsoon.csv"):
     games = []
-    with open(csv_path, "r", encoding="utf-8") as f:
+    with open(csv_path, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             games.append(row)
@@ -94,7 +94,7 @@ def main(csv_path: str = "/Users/zhoudong/tmp/steam_aug_comingsoon.csv"):
 
     print(f"符合条件的游戏数量: {len(target_games)}")
     for appid, name, rd, followers, latest_date in target_games:
-        print(f"游戏: {name}, id: {appid}, 上映日期: {rd}, 粉丝数: {followers}, 最新记录日期: {latest_date}")
+        print(f"id: {appid}, 游戏: {name}, 上映日期: {rd}, 粉丝数: {followers}, 最新记录日期: {latest_date}")
 
 
 if __name__ == "__main__":

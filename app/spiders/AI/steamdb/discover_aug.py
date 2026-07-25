@@ -38,6 +38,30 @@ SEARCH_URL = (
 )
 
 
+_STEAM_COOKIE = (
+    "browserid=465709802994351609; sessionid=c9f46d284b028e292b28a978; "
+    "steamCountry=SG%7C243aff38ec4c6fa504e49846c6529899; "
+    "timezoneOffset=28800,0; "
+    "app_impressions=1575990@1_7_7_comingsoon_150_31|2825860@1_7_7_comingsoon_150_31|4749450@1_7_7_comingsoon_150_31|3148400@1_7_7_comingsoon_150_31|2928570@1_7_7_comingsoon_150_31|4513060@1_7_7_comingsoon_150_31|4846800@1_7_7_comingsoon_150_31|4846690@1_7_7_comingsoon_150_31|4412960@1_7_7_comingsoon_150_31|4950450@1_7_7_comingsoon_150_32|4417770@1_7_7_comingsoon_150_32|4853360@1_7_7_comingsoon_150_32|4663080@1_7_7_comingsoon_150_32|4849660@1_7_7_comingsoon_150_32|4604680@1_7_7_comingsoon_150_32|4317790@1_7_7_comingsoon_150_32|3940340@1_7_7_comingsoon_150_32|4280390@1_7_7_comingsoon_150_32|3924150@1_7_7_comingsoon_150_32|4964110@1_7_7_comingsoon_150_32|4329670@1_7_7_comingsoon_150_32|4836900@1_7_7_comingsoon_150_32|4779460@1_7_7_comingsoon_150_32|4386980@1_7_7_comingsoon_150_32|4488300@1_7_7_comingsoon_150_32|4026250@1_7_7_comingsoon_150_32|3960830@1_7_7_comingsoon_150_32|4453060@1_7_7_comingsoon_150_32|4532490@1_7_7_comingsoon_150_32|3432200@1_7_7_comingsoon_150_32|4132330@1_7_7_comingsoon_150_32|3492150@1_7_7_comingsoon_150_32|4855450@1_7_7_comingsoon_150_32|4070390@1_7_7_comingsoon_150_32|4772010@1_7_7_comingsoon_150_32|2124360@1_7_7_comingsoon_150_32|4292950@1_7_7_comingsoon_150_32|3958820@1_7_7_comingsoon_150_32|3966510@1_7_7_comingsoon_150_33|4543070@1_7_7_comingsoon_150_33|4988670@1_7_7_comingsoon_150_33|2621930@1_7_7_comingsoon_150_33|2766910@1_7_7_comingsoon_150_33"
+)
+
+_HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    "Connection": "keep-alive",
+    "Cookie": _STEAM_COOKIE,
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+    "sec-ch-ua": '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
+}
+
+
 def _build_opener():
     """根据环境变量 HTTP_PROXY / HTTPS_PROXY 创建 opener（支持代理）。"""
     proxy = os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or ""
@@ -51,9 +75,7 @@ _OPENER = _build_opener()
 
 
 def fetch_json(url, tries=10):
-    req = urllib.request.Request(
-        url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
-    )
+    req = urllib.request.Request(url, headers=_HEADERS)
     last = None
     for i in range(tries):
         try:
