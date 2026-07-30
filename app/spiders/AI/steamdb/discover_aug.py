@@ -154,7 +154,7 @@ def is_aug_2026(cn_date):
 
 def is_aug_18_20(en_date):
     """判断英文日期是否在 2026 年 8 月 18 日 ~ 20 日之间"""
-    m = re.search(r"^(\d{1,2})\s+(\w{3})\s*,\s*(\d{4})$", (en_date or "").strip())
+    m = re.search(r"^(\d{1,2})\s+(\w{3})\s*,?\s*(\d{4})$", (en_date or "").strip())
     if not m:
         return False
     day, mon, year = int(m.group(1)), m.group(2), int(m.group(3))

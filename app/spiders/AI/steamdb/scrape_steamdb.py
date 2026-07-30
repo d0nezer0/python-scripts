@@ -125,7 +125,7 @@ def fetch_with_proxy(appid: str | int, max_retries: int = 5) -> dict | None:
             print(f"  [重试 {attempt}/{max_retries}] appid={appid} 请求失败: {e}")
 
         if attempt < max_retries:
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     return None
 
@@ -194,10 +194,15 @@ def process_csv():
     # 如果新增了字段，需要重写表头+全部数据
     need_rewrite = need_add_today_release or need_add_today_followers
     if need_rewrite:
+        # 过滤掉 None key，避免 csv.DictWriter 报错
+        cleaned_rows = []
+        for row in rows:
+            cleaned_row = {k: v for k, v in row.items() if k is not None}
+            cleaned_rows.append(cleaned_row)
         with open(CSV_PATH, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
-            writer.writerows(rows)
+            writer.writerows(cleaned_rows)
         print("表头已更新，数据已重写")
 
     # 临时文件路径
@@ -236,7 +241,8 @@ def process_csv():
         print(f"  releaseDate: {yesterday_release}")
 
         # 复制 releaseDate 到今日列
-        row[today_release_col] = yesterday_release
+        # 0729 可能会变， 不准不要。
+        # row[today_release_col] = yesterday_release
 
         # 通过 API 获取 followers (f 字段)
         print(f"  正在通过 API 获取 followers...")
@@ -257,7 +263,7 @@ def process_csv():
                 writer.writerow(row)
             continue
         if result is None:
-            print(f"  API 请求失败，跳过 followers 更新")
+            print(f"  API 请求失败，result is None")
             row[today_followers_col] = "无"
             api_fail_count += 1
             # 报警：昨天有 followers 值，今天没获取到
@@ -310,7 +316,7 @@ def main():
     print("=" * 50)
     print("第一步：发现 8 月新游戏...")
     print("=" * 50)
-    # discover_aug.main(csv_path=CSV_PATH)
+    discover_aug.main(csv_path=CSV_PATH)
 
     # 第二步， 全量 followers 抓取；
     print("\n" + "=" * 50)
