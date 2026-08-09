@@ -10,6 +10,7 @@ import os
 import random
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 import requests
@@ -154,8 +155,63 @@ def get_yesterday_suffix() -> str:
     return yesterday.strftime("%m%d")
 
 
+def process_single_row(
+    index: int,
+    row: dict,
+    yesterday_followers_col: str,
+    today_followers_col: str,
+) -> tuple[int, dict, str, bool]:
+    """
+    处理单行：调用 API 获取 followers 数据
+
+    Returns:
+        (index, modified_row, status, is_alarm)
+        status: "skipped" | "updated" | "no_followers" | "api_fail"
+    """
+    app_id = (row.get("id") or "").strip()
+    yesterday_followers = (row.get(yesterday_followers_col) or "").strip()
+    today_followers = (row.get(today_followers_col) or "").strip()
+
+    # 如果今日已有 followers 值，跳过
+    if today_followers:
+        return index, row, "skipped", False
+
+    # 通过 API 获取 followers
+    result = fetch_with_proxy(app_id)
+    is_alarm = False
+
+    # 检查是否返回字符串 "无"（对应 API 返回 success=false）
+    if result == "无":
+        row[today_followers_col] = "无"
+        if yesterday_followers and yesterday_followers != "无":
+            row[today_followers_col] = yesterday_followers
+            is_alarm = True
+            print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 返回 success=false")
+        return index, row, "no_followers", is_alarm
+
+    if result is None:
+        row[today_followers_col] = "无"
+        if yesterday_followers and yesterday_followers != "无":
+            row[today_followers_col] = yesterday_followers
+            is_alarm = True
+            print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 请求失败")
+        return index, row, "api_fail", is_alarm
+
+    # 正常返回 data 字典，提取 f 值
+    f_value = result.get("data", {}).get("f")
+    if f_value is not None and isinstance(f_value, (int, float)):
+        row[today_followers_col] = str(f_value)
+        return index, row, "updated", False
+
+    # f 字段异常
+    if yesterday_followers:
+        is_alarm = True
+        print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 f 字段异常={f_value}")
+    return index, row, "api_fail", is_alarm
+
+
 def process_csv():
-    """主处理逻辑"""
+    """主处理逻辑（多并发版本）"""
     today_suffix = get_today_suffix()
     yesterday_suffix = get_yesterday_suffix()
 
@@ -194,7 +250,6 @@ def process_csv():
     # 如果新增了字段，需要重写表头+全部数据
     need_rewrite = need_add_today_release or need_add_today_followers
     if need_rewrite:
-        # 过滤掉 None key，避免 csv.DictWriter 报错
         cleaned_rows = []
         for row in rows:
             cleaned_row = {k: v for k, v in row.items() if k is not None}
@@ -205,107 +260,64 @@ def process_csv():
             writer.writerows(cleaned_rows)
         print("表头已更新，数据已重写")
 
-    # 临时文件路径
-    tmp_csv_path = CSV_PATH + ".tmp"
-
-    # 遍历每一行处理，处理完写入临时文件
+    # 并发处理每一行
     updated_count = 0
     skipped_count = 0
     api_fail_count = 0
+    no_followers_count = 0
     alarm_count = 0
 
-    # 先写入表头到临时文件
+    # 收集结果（按 index 排序）
+    results: dict[int, dict] = {}
+
+    CONCURRENCY = 8
+    print(f"\n开始并发抓取（并发数={CONCURRENCY}）...")
+    with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
+        futures = {}
+        for i, row in enumerate(rows):
+            future = executor.submit(
+                process_single_row,
+                i, row, yesterday_followers_col, today_followers_col,
+            )
+            futures[future] = i
+
+        done_count = 0
+        for future in as_completed(futures):
+            i, row, status, is_alarm = future.result()
+            results[i] = row
+
+            if status == "skipped":
+                skipped_count += 1
+            elif status == "updated":
+                updated_count += 1
+            elif status == "no_followers":
+                no_followers_count += 1
+            elif status == "api_fail":
+                api_fail_count += 1
+            if is_alarm:
+                alarm_count += 1
+
+            done_count += 1
+            if done_count % 50 == 0 or done_count == len(rows):
+                print(f"  进度: {done_count}/{len(rows)} 已完成")
+
+    # 按原始顺序写回 CSV
+    tmp_csv_path = CSV_PATH + ".tmp"
     with open(tmp_csv_path, mode="w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
+        for i in range(len(rows)):
+            writer.writerow(results[i])
 
-    for i, row in enumerate(rows):
-        app_id = (row.get("id") or "").strip()
-        yesterday_release = (row.get(yesterday_release_col) or "").strip()
-        yesterday_followers = (row.get(yesterday_followers_col) or "").strip()
-        today_followers = (row.get(today_followers_col) or "").strip()
-
-        print(f"\n--- 行 {i + 1}: appid={app_id}, name={row.get('name', '')} ---")
-
-        # 如果今日已有 followers 值（且不是默认的"无"），跳过
-        if today_followers:
-            print(f"  跳过: 今日已有 followers 值 ('{today_followers}')")
-            skipped_count += 1
-            # 追加写入临时文件
-            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow(row)
-            continue
-
-        # 全量抓取：所有行都尝试获取 followers
-        print(f"  releaseDate: {yesterday_release}")
-
-        # 复制 releaseDate 到今日列
-        # 0729 可能会变， 不准不要。
-        # row[today_release_col] = yesterday_release
-
-        # 通过 API 获取 followers (f 字段)
-        print(f"  正在通过 API 获取 followers...")
-        result = fetch_with_proxy(app_id)
-
-        # 检查是否返回字符串 "无"（对应 API 返回 success=false）
-        if result == "无":
-            print(f"  API 返回 success=false，followers 填入 '无'")
-            row[today_followers_col] = "无"
-            # 报警：昨天有 followers 值，今天返回 false
-            if yesterday_followers and yesterday_followers != "无":
-                row[today_followers_col] = yesterday_followers
-                print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 返回 success=false")
-                alarm_count += 1
-            # 追加写入临时文件
-            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow(row)
-            continue
-        if result is None:
-            print(f"  API 请求失败，result is None")
-            row[today_followers_col] = "无"
-            api_fail_count += 1
-            # 报警：昨天有 followers 值，今天没获取到
-            if yesterday_followers and yesterday_followers != "无":
-                row[today_followers_col] = yesterday_followers
-                print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 API 请求失败")
-                alarm_count += 1
-            # 追加写入临时文件
-            with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow(row)
-            continue
-
-        # 正常返回 data 字典，提取 f 值
-        f_value = result.get("data", {}).get("f")
-
-        # 检查 f 值是否正常
-        if f_value is not None and isinstance(f_value, (int, float)):
-            row[today_followers_col] = str(f_value)
-            print(f"  followers 更新成功: {f_value}")
-            updated_count += 1
-        else:
-            print(f"  f 字段异常: {f_value}")
-            api_fail_count += 1
-            # 报警：昨天有 followers 值，今天 f 字段异常
-            if yesterday_followers:
-                print(f"  [报警] appid={app_id} 昨天有 followers={yesterday_followers}，今天 f 字段异常={f_value}")
-                alarm_count += 1
-
-        # 追加写入临时文件
-        with open(tmp_csv_path, mode="a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writerow(row)
-
-    # 全部处理完成，用临时文件替换原文件
+    # 用临时文件替换原文件
     os.replace(tmp_csv_path, CSV_PATH)
 
     print(f"\n{'=' * 50}")
     print(f"处理完成!")
     print(f"  更新行数: {updated_count}")
     print(f"  跳过行数: {skipped_count}")
-    print(f"  API 失败: {api_fail_count}")
+    print(f"  无followers: {no_followers_count}")
+    print(f"  API失败: {api_fail_count}")
     print(f"  报警次数: {alarm_count}")
     print(f"  总行数: {len(rows)}")
     print(f"  当前字段: {fieldnames}")
